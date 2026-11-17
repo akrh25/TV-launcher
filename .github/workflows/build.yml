@@ -1,7 +1,10 @@
 name: Build APK
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,8 +17,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - run: unzip -q MiniLauncher.zip && cd MiniLauncher && gradle assembleDebug
-      - uses: actions/upload-artifact@v4
+      - run: unzip -q -o MiniLauncher.zip
+      - run: cd MiniLauncher && gradle assembleDebug --stacktrace
+      - run: cp MiniLauncher/app/build/outputs/apk/debug/app-debug.apk MiniLauncher-v${{ github.run_number }}.apk
+      - uses: softprops/action-gh-release@v2
         with:
-          name: MiniLauncher-apk
-          path: MiniLauncher/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: MiniLauncher-v${{ github.run_number }}.apk
