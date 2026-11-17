@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -17,7 +19,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - run: unzip -q -o MiniLauncher.zip
+      - name: En yeni zip'i ac
+        run: |
+          ZIP=$(for f in *.zip; do echo "$(git log -1 --format=%ct -- "$f") $f"; done | sort -n | tail -1 | cut -d' ' -f2-)
+          echo "Kullanilan zip: $ZIP"
+          unzip -q -o "$ZIP"
+      - run: grep versionName MiniLauncher/app/build.gradle.kts
       - run: cd MiniLauncher && gradle assembleDebug --stacktrace
       - run: cp MiniLauncher/app/build/outputs/apk/debug/app-debug.apk MiniLauncher-v${{ github.run_number }}.apk
       - uses: softprops/action-gh-release@v2
